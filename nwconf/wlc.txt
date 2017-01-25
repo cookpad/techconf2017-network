@@ -1,0 +1,590 @@
+ 802.11a 11nSupport a-mpdu tx scheduler enable
+
+ 802.11a 11nSupport a-mpdu tx scheduler timeout rt 10
+
+ 802.11a 11nSupport mcs tx 0 disable
+
+ 802.11a 11nSupport mcs tx 1 disable
+
+ 802.11a 11nSupport mcs tx 2 disable
+
+ 802.11a 11nSupport mcs tx 3 disable
+
+ 802.11a 11nSupport mcs tx 8 disable
+
+ 802.11a 11nSupport mcs tx 9 disable
+
+ 802.11a 11nSupport mcs tx 16 disable
+
+ 802.11a beacon range 0
+
+ 802.11a rx-sop threshold 0 default
+
+ 802.11a cca threshold 0 default
+
+ 802.11a multicast buffer 0
+
+ 802.11a multicast data-rate 0 default
+
+ 802.11a cac video cac-method static
+
+ 802.11a max-clients 200
+
+ 802.11a rate disabled 6
+
+ 802.11a rate disabled 9
+
+ 802.11a rate disabled 12
+
+ 802.11a rate disabled 18
+
+ 802.11a txPower global 5
+
+ 802.11a dfs-peakdetect enable
+
+ 802.11b 11nSupport a-mpdu tx scheduler enable
+
+ 802.11b 11nSupport a-mpdu tx scheduler timeout rt 10
+
+ 802.11b 11nSupport mcs tx 0 disable
+
+ 802.11b 11nSupport mcs tx 1 disable
+
+ 802.11b 11nSupport mcs tx 2 disable
+
+ 802.11b 11nSupport mcs tx 3 disable
+
+ 802.11b 11nSupport mcs tx 8 disable
+
+ 802.11b 11nSupport mcs tx 9 disable
+
+ 802.11b 11nSupport mcs tx 16 disable
+
+ 802.11b beacon range 0
+
+ 802.11b rx-sop threshold 0 default
+
+ 802.11b cca threshold 0 default
+
+ 802.11b multicast buffer 0
+
+ 802.11b multicast data-rate 0 default
+
+ 802.11b cac video cac-method static
+
+ 802.11b max-clients 200
+
+ 802.11b rate disabled 1
+
+ 802.11b rate disabled 2
+
+ 802.11b rate disabled 5.5
+
+ 802.11b rate disabled 11
+
+ 802.11b rate disabled 6
+
+ 802.11b rate disabled 9
+
+ 802.11b rate disabled 12
+
+ 802.11b rate disabled 18
+
+ 802.11b rate mandatory 24
+
+ 802.11b txPower global 5
+
+ aaa auth mgmt  local radius
+
+ flexconnect fallback-radio-shut disable
+
+ advanced 802.11a channel dca interval 0
+
+ advanced 802.11a channel dca anchor-time 0
+
+ advanced 802.11a channel dca channel-width 20
+
+ advanced 802.11a channel dca sensitivity 15
+
+ advanced 802.11a channel dca min-metric -95
+
+ advanced 802.11a reporting neighbor 180
+
+ advanced 802.11a reporting interference 120
+
+ advanced 802.11b channel dca interval 0
+
+ advanced 802.11b channel dca anchor-time 0
+
+ advanced 802.11b channel dca sensitivity 10
+
+ advanced 802.11b channel dca min-metric -95
+
+ advanced 802.11b reporting neighbor 180
+
+ advanced 802.11b reporting interference 120
+
+ location rssi-half-life tags 0
+
+ location rssi-half-life client 0
+
+ location rssi-half-life rogue-aps 0
+
+ location expiry tags 5
+
+ location expiry client 5
+
+ location expiry calibrating-client 5
+
+ location expiry rogue-aps 5
+
+ advanced backup-controller primary
+
+ advanced backup-controller secondary
+
+ advanced backup-controller
+
+ advanced backup-controller
+
+ advanced sip-snoop-ports 0 0
+
+ advanced eap bcast-key-interval 3600
+
+ advanced hotspot cmbk-delay 50
+
+Cisco Public Safety is not allowed to set in this domain
+
+ ap syslog host global 0.0.0.0
+
+ ap dtls-cipher-suite RSA-AES128-SHA
+
+
+ cdp advertise-v2 enable
+
+ country J4
+
+ cts sxp disable
+
+ cts sxp connection default password ****
+ cts sxp retry period 120
+ cts sxp sxpversion 2
+ database size 2048
+
+
+
+ dhcp opt-82 remote-id ap-mac
+
+ local-auth method fast server-key ****
+
+interface create techconf 100
+
+interface address management 10.200.16.10 255.255.255.0 10.200.16.1
+
+interface address dynamic-interface techconf 10.200.0.10 255.255.240.0 10.200.0.1
+
+interface address virtual 1.1.1.1
+
+interface dhcp management primary 10.200.16.1
+
+interface dhcp dynamic-interface techconf primary 10.200.0.1
+
+interface vlan techconf 100
+
+interface port management 13
+
+interface port techconf 13
+
+
+ mdns snooping disable
+
+ mdns profile create default-mdns-profile
+
+ mdns service create AirPrint _ipp._tcp.local. origin All LSS disable query enable
+
+ mdns service create AirTunes _raop._tcp.local. origin All LSS disable query enable
+
+ mdns service create AppleTV _airplay._tcp.local. origin All LSS disable query enable
+
+ mdns service create HP_Photosmart_Printer_1 _universal._sub._ipp._tcp.local. origin All LSS disable query enable
+
+ mdns service create HP_Photosmart_Printer_2 _cups._sub._ipp._tcp.local. origin All LSS disable query enable
+
+ mdns service create Printer _printer._tcp.local. origin All LSS disable query enable
+
+ mdns profile service add default-mdns-profile AirPrint
+
+ mdns profile service add default-mdns-profile AirTunes
+
+ mdns profile service add default-mdns-profile AppleTV
+
+ mdns profile service add default-mdns-profile HP_Photosmart_Printer_1
+
+ mdns profile service add default-mdns-profile HP_Photosmart_Printer_2
+
+ mdns profile service add default-mdns-profile Printer
+
+ mdns query interval 15
+
+ wlan mdns disable 2
+
+ wlan mdns disable 10
+
+
+
+ ipv6 ra-guard ap enable
+
+ ipv6 multicast mode unicast
+
+ lag enable
+
+ load-balancing aggressive enable
+
+ load-balancing window 5
+
+ wlan apgroup add default-group
+
+ wlan apgroup add techconf TechConf
+
+ wlan apgroup interface-mapping add default-group 2 techconf
+
+ wlan apgroup interface-mapping add default-group 10 management
+
+ wlan apgroup interface-mapping add techconf 2 techconf
+
+ wlan apgroup interface-mapping add techconf 10 management
+
+ wlan apgroup nac-snmp disable default-group 2
+
+ wlan apgroup nac-snmp disable default-group 10
+
+ wlan apgroup nac-snmp disable techconf 2
+
+ wlan apgroup nac-snmp disable techconf 10
+
+
+ memory monitor errors enable
+
+ memory monitor leak thresholds 10000 30000
+mesh security rad-mac-filter disable
+mesh security rad-mac-filter disable
+
+ mesh security eap
+
+ mgmtuser add admin **** read-write
+
+ mobility group domain WLAN
+
+ mobility dscp 0
+
+ network ap-priority disabled
+
+ network fast-ssid-change enable
+
+ network rf-network-name WLAN
+
+ network secureweb cipher-option rc4-preference disable
+
+ paging disable
+
+ qos priority bronze background background background
+
+ qos priority gold video video video
+
+ qos priority platinum voice voice voice
+
+ qos priority silver besteffort besteffort besteffort
+
+ radius auth callStationIdType ap-macaddr-ssid
+
+ radius fallback-test mode off
+
+ radius fallback-test username cisco-probe
+
+ radius fallback-test interval 300
+
+ radius dns disable
+ tacacs dns disable
+ rogue detection report-interval 10
+ rogue detection min-rssi -128
+ rogue detection transient-rogue-interval 0
+ rogue detection client-threshold 0
+ rogue detection security-level custom
+ rogue ap ssid alarm
+
+ rogue ap valid-client alarm
+
+ rogue adhoc enable
+
+ rogue adhoc alert
+
+ rogue ap rldp disable
+
+ config rogue auto-contain level 1
+
+ rogue containment flex-connect disable
+ rogue containment auto-rate disable
+ snmp version v2c enable
+
+ snmp community create xxx
+
+ snmp community accessmode ro xxx
+
+ snmp snmpEngineId 8deadbeef
+
+snmp community ipsec ike auth-mode pre-shared-key ****
+
+ switchconfig strong-pwd case-check enabled
+
+ switchconfig strong-pwd consecutive-check enabled
+
+ switchconfig strong-pwd default-check enabled
+
+ switchconfig strong-pwd username-check enabled
+
+ switchconfig strong-pwd position-check disabled
+
+ switchconfig strong-pwd case-digit-check disabled
+
+ switchconfig strong-pwd minimum upper-case 0
+
+ switchconfig strong-pwd minimum lower-case 0
+
+ switchconfig strong-pwd minimum digits-chars 0
+
+ switchconfig strong-pwd minimum special-chars 0
+
+ switchconfig strong-pwd min-length 3
+
+ sysname TechConfWLC
+
+ stats-timer realtime 5
+
+ stats-timer normal 180
+
+ time ntp server 1 133.243.238.244
+
+
+ rf-profile create 802.11a TechConf_RFProfile
+
+
+
+
+
+
+
+
+ rf-profile data-rates 802.11a disabled 6 TechConf_RFProfile
+
+ rf-profile data-rates 802.11a disabled 9 TechConf_RFProfile
+
+ rf-profile data-rates 802.11a disabled 12 TechConf_RFProfile
+
+ rf-profile data-rates 802.11a disabled 18 TechConf_RFProfile
+
+ rf-profile data-rates 802.11a mandatory 24 TechConf_RFProfile
+
+ rf-profile data-rates 802.11a supported 36 TechConf_RFProfile
+
+ rf-profile data-rates 802.11a supported 48 TechConf_RFProfile
+
+ rf-profile data-rates 802.11a supported 54 TechConf_RFProfile
+
+
+
+
+
+ rf-profile max-clients 100 TechConf_RFProfile
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ trapflags client nac-alert enable
+
+ trapflags ap ssidKeyConflict disable
+
+ trapflags ap timeSyncFailure disable
+
+ trapflags adjchannel-rogueap disable
+
+ trapflags mesh excessive hop count disable
+
+ trapflags mesh sec backhaul change disable
+
+ wlan create 2 TechConf TechConf
+
+ wlan create 10 ckpdmgmt ckpdmgmt
+
+ wlan nac snmp disable 2
+
+ wlan nac snmp disable 10
+
+
+ wlan nac radius disable 2
+
+ wlan nac radius disable 10
+
+ wlan interface 2 techconf
+
+ wlan multicast interface 2 disable
+
+ wlan multicast interface 10 disable
+
+ wlan band-select allow disable 2
+
+ wlan band-select allow disable 10
+
+ wlan exclusionlist 2 disabled
+
+ wlan exclusionlist 2 0
+
+ wlan exclusionlist 10 disabled
+
+ wlan exclusionlist 10 0
+
+ wlan load-balance allow disable 2
+
+ wlan load-balance allow disable 10
+
+ wlan multicast buffer disable 0 2
+
+ wlan multicast buffer disable 0 10
+
+ wlan session-timeout 2 disable
+
+ wlan session-timeout 10 disable
+
+ wlan flexconnect local-switching 2 enable
+
+ wlan flexconnect local-switching 10 enable
+
+ wlan flexconnect learn-ipaddr 2 enable
+
+ wlan flexconnect learn-ipaddr 10 enable
+
+ wlan security splash-page-web-redir disable 2
+
+ wlan security splash-page-web-redir disable 10
+
+ wlan user-idle-threshold 70 2
+
+ wlan user-idle-threshold 70 10
+
+ wlan security wpa akm  psk enable 2
+
+ wlan security wpa akm  psk enable 10
+
+ wlan security wpa akm cckm timestamp-tolerance  1000 2
+
+ wlan security wpa akm cckm timestamp-tolerance  1000 10
+
+
+ wlan security wpa gtk-random disable 2
+
+ wlan security wpa gtk-random disable 10
+
+ wlan security pmf association-comeback 1 2
+
+ wlan security pmf association-comeback 1 10
+
+ wlan security pmf saquery-retrytimeout 200 2
+
+ wlan security pmf saquery-retrytimeout 200 10
+
+ wlan exclusionlist 2 disabled
+
+ wlan exclusionlist 2 0
+
+ wlan exclusionlist 10 disabled
+
+ wlan exclusionlist 10 0
+
+ wlan peer-blocking drop 2
+
+
+
+ wlan profiling radius dhcp disable 2
+
+ wlan profiling radius http disable 2
+
+ wlan profiling radius dhcp disable 10
+
+ wlan profiling radius http disable 10
+
+ wlan apgroup hotspot venue type techconf 0 0
+
+ wlan enable 2
+
+ wlan enable 10
+
+ license agent default authenticate none
+
+ license boot base
+
+ WMM-AC disabled
+
+
+ coredump disable
+
+media-stream multicast-direct disable
+
+
+
+
+media-stream message url
+media-stream message email
+media-stream message phone
+media-stream message note denial
+media-stream message state disable
+
+802.11a media-stream multicast-direct enable
+802.11b media-stream multicast-direct enable
+
+802.11a media-stream multicast-direct radio-maximum 0
+802.11b media-stream multicast-direct radio-maximum 0
+
+802.11a media-stream multicast-direct client-maximum 0
+802.11b media-stream multicast-direct client-maximum 0
+
+802.11a media-stream multicast-direct admission-besteffort disable
+802.11b media-stream multicast-direct admission-besteffort disable
+
+802.11a media-stream video-redirect enable
+802.11b media-stream video-redirect enable
+
+ ipv6 neighbor-binding timers reachable-lifetime 300
+
+ ipv6 neighbor-binding timers stale-lifetime 86400
+
+ ipv6 neighbor-binding timers down-lifetime 30
+
+ ipv6 neighbor-binding ra-throttle disable
+
+ ipv6 neighbor-binding ra-throttle allow at-least 1 at-most 1
+
+ ipv6 neighbor-binding ra-throttle max-through 10
+
+ ipv6 neighbor-binding ra-throttle throttle-period 600
+
+ ipv6 neighbor-binding ra-throttle interval-option passthrough
+
+ ipv6 NS Multicast Cachemiss Forward disable
+
+ ipv6 NA Multicast Forward enable
+
+ ipv6 Global Config enable
+
+ nmheartbeat disable

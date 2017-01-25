@@ -1,0 +1,4 @@
+Cmnd_Alias UNBOUND_CONTROL_STATS = /usr/bin/unbound-control stats
+Defaults!UNBOUND_CONTROL_STATS !requiretty,!syslog
+
+ALL ALL = (root) NOPASSWD: UNBOUND_CONTROL_STATS

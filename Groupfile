@@ -1,0 +1,244 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+ec2 "vpc-deadbeef" do
+  security_group "bastion" do
+    description "bastion"
+
+    ingress do
+      permission :any do
+        groups(
+          "default"
+        )
+      end
+      permission :tcp, 22..22 do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+      permission :tcp, 1022..1022 do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+    end
+
+    egress do
+      permission :any do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+    end
+  end
+
+  security_group "default" do
+    description "default VPC security group"
+
+    tags(
+      "Name" => "techconf default"
+    )
+
+    ingress do
+      permission :icmp, -1..-1 do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+      permission :tcp, 22..22 do
+        ip_ranges(
+          "10.200.16.0/24"
+        )
+        groups(
+          "default"
+        )
+      end
+      permission :tcp, 10050..10050 do
+        groups(
+          "zabbix-server",
+        )
+      end
+
+    end
+
+    egress do
+      permission :any do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+    end
+  end
+
+  security_group "dns" do
+    description "dns"
+
+    ingress do
+      permission :tcp, 53..53 do
+        ip_ranges(
+          "10.200.0.0/16",
+        )
+      end
+      permission :udp, 53..53 do
+        ip_ranges(
+          "10.200.0.0/16",
+        )
+      end
+    end
+
+    egress do
+      permission :any do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+    end
+  end
+
+  security_group "dhcp" do
+    description "dhcp"
+
+    ingress do
+      permission :udp, 67..68 do
+        ip_ranges(
+          "10.200.16.1/32",
+          "10.200.0.1/32",
+        )
+      end
+    end
+
+    egress do
+      permission :any do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+    end
+  end
+
+  security_group "zabbix-server" do
+    description "zabbix-server"
+
+    ingress do
+      permission :tcp, 80..80 do
+        groups(
+          "front-http",
+        )
+      end
+
+      permission :tcp, 10051..10051 do
+        ip_ranges(
+          "10.200.16.0/24",
+          "10.200.17.0/24",
+        )
+
+        groups(
+          "default",
+        )
+      end
+    end
+
+    egress do
+      permission :any do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+    end
+  end
+
+  security_group "public-http" do
+    description "rproxy"
+
+    ingress do
+      permission :tcp, 80..80 do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+
+      permission :tcp, 443..443 do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+    end
+
+    egress do
+      permission :any do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+    end
+  end
+
+  security_group "elb-http" do
+    description "rproxy"
+
+    ingress do
+    end
+
+    egress do
+      permission :any do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+    end
+  end
+
+  security_group "front-http" do
+    description "rproxy"
+
+    ingress do
+      permission :tcp, 80..80 do
+        groups(
+          "elb-http",
+        )
+      end
+    end
+
+    egress do
+      permission :any do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+    end
+  end
+
+  security_group "syslog" do
+    description "syslog"
+
+    ingress do
+      permission :tcp, 514..514 do
+        ip_ranges(
+          "10.200.16.0/24",
+          "10.200.17.0/24",
+        )
+        groups(
+          'default',
+        )
+      end
+      permission :udp, 514..514 do
+        ip_ranges(
+          "10.200.16.0/24",
+          "10.200.17.0/24",
+        )
+        groups(
+          'default',
+        )
+      end
+    end
+
+    egress do
+      permission :any do
+        ip_ranges(
+          "0.0.0.0/0"
+        )
+      end
+    end
+  end
+
+
+end

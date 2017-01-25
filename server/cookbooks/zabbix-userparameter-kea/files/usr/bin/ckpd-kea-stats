@@ -1,0 +1,44 @@
+#!/usr/bin/ruby
+require 'json'
+require 'socket'
+require 'pp'
+
+value_only = ARGV.delete('--value')
+key = ARGV[0]
+if key
+  key = key.gsub(/subnet-(\d+)\./, 'subnet[\1].')
+end
+def wait_json(io)
+  buf = ""
+  json = nil
+  until json
+    buf << io.readpartial(32)
+    json = JSON.parse(buf) rescue nil
+  end
+  json
+end
+
+
+UNIXSocket.open('/run/kea/kea.sock') do |io|
+  if key
+    io.write({command: "statistic-get", arguments: {name: key}}.to_json)
+  else
+    io.write({command: "statistic-get-all", arguments: {}}.to_json)
+  end
+  json = wait_json(io)
+  unless json['result'] == 0
+    $stderr.puts json.inspect
+    exit 1
+  end
+  if value_only && json['arguments'].empty?
+    puts 0
+  end
+  json['arguments'].each do |k, vs|
+    v,t = vs.last
+    if value_only
+      puts v
+    else
+      puts [k,v,t].join(?\t)
+    end
+  end
+end

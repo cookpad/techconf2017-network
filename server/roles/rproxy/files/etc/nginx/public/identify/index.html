@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Identify</title>
+    <meta charset="utf-8">
+  </head>
+  <body>
+    <script>
+      (function(){
+        document.addEventListener('DOMContentLoaded', function(){
+          var elem = document.querySelector('#identify');
+          fetch('/test', { credentials: 'include' }).then(function(response) {
+            if (response.status !== 200) {
+              console.log(response);
+              elem.innerHTML = `Error: ${response.status}`;
+              return;
+            }
+            elem.innerHTML = response.headers.get('x-ngx-omniauth-user');
+          }).catch(function(err) {
+            console.log(err);
+            elem.innerHTML = `Error: ${err}`;
+          });
+        });
+      })();
+    </script>
+    <div id="identify" style="font-size: 120%; font-family: monospace;">loading</div>
+  </body>
+</html>
+<!-- vim: ft=html
+-->
+

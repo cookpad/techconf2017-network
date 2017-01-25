@@ -1,0 +1,10 @@
+[Unit]
+Description=iperf3
+After=network.target
+
+[Service]
+User=nobody
+ExecStart=/usr/bin/iperf3 -s
+
+[Install]
+WantedBy=multi-user.target

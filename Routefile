@@ -1,0 +1,121 @@
+# vim: ft=ruby
+
+dic = %w(
+gw.client.nw.techconf.cookpad.com	10.200.0.1
+wlc.client.nw.techconf.cookpad.com	10.200.0.10
+gw.mgmt.nw.techconf.cookpad.com	10.200.16.1
+sw.mgmt.nw.techconf.cookpad.com	10.200.16.2
+sw2.mgmt.nw.techconf.cookpad.com	10.200.16.3
+wlc.mgmt.nw.techconf.cookpad.com	10.200.16.10
+ap-1.mgmt.nw.techconf.cookpad.com	10.200.16.11
+ap-2.mgmt.nw.techconf.cookpad.com	10.200.16.12
+ap-3.mgmt.nw.techconf.cookpad.com	10.200.16.13
+ap-4.mgmt.nw.techconf.cookpad.com	10.200.16.14
+ap-5.mgmt.nw.techconf.cookpad.com	10.200.16.15
+ap-6.mgmt.nw.techconf.cookpad.com	10.200.16.16
+ap-7.mgmt.nw.techconf.cookpad.com	10.200.16.17
+ap-8.mgmt.nw.techconf.cookpad.com	10.200.16.18
+tp.mgmt.nw.techconf.cookpad.com	10.200.16.20
+dns.srv.nw.techconf.cookpad.com	10.200.17.10
+).each_slice(2).map { |a,b| [a.sub(/\.nw\.techconf.*$/, ""), b] }.to_h
+
+def fetch_instances
+  ec2 = Aws::EC2::Resource.new(region: 'ap-northeast-1')
+  vpc = ec2.vpc('vpc-deadbeef')
+  vpc_domain = "aws.nw.techconf.cookpad.com"
+
+  vpc.instances.map do |instance|
+    name_tag = instance.tags.find { |_| _.key == "Name" }
+    alias_tag = instance.tags.find { |_| _.key == "Alias" }
+
+    name_from_ip = instance.private_dns_name.split('.').first
+    raise if name_from_ip.empty?
+
+    if name_tag && !name_tag.value.empty?
+      next if name_tag.value.include?('=')
+      next if name_tag.value.size > 62
+      name = name_tag.value.gsub(?_,?-)
+    else
+      name = name_from_ip
+    end
+
+    alias_name = alias_tag && alias_tag.value.gsub(?_,?-)
+
+    alias_name_from_ip = unless name_from_ip == name
+                           name_from_ip
+                         end
+
+    [
+      name,
+      name: name,
+      alias: alias_name,
+      alias_from_ip: alias_name_from_ip,
+      ip: instance.private_ip_address,
+      fqdn: "#{name}.#{vpc_domain}.",
+      alias_fqdn: (alias_name && !alias_name.empty?) ? "#{alias_name}.#{vpc_domain}." : nil,
+      alias_fqdn_from_ip: alias_name_from_ip && "#{alias_name_from_ip}.#{vpc_domain}.",
+      ptr_fqdn: "#{instance.private_ip_address.split(?.).reverse.join(?.)}.in-addr.arpa.",
+    ]
+  end.compact.to_h
+end
+
+instances = fetch_instances()
+
+hosted_zone "nw.techconf.cookpad.com." do
+  vpc "ap-northeast-1", "vpc-deadbeef"
+
+  dic.each do |host,ip|
+    rrset "#{host}.nw.techconf.cookpad.com.", "A" do
+      ttl 60
+      resource_records(
+        ip,
+      )
+    end
+  end
+
+  instances.each do |name, instance|
+    rrset instance[:fqdn], "A" do
+      ttl 60
+      resource_records instance[:ip]
+    end
+
+    if instance[:alias]
+      rrset instance[:alias_fqdn], "CNAME" do
+        ttl 60
+        resource_records instance[:fqdn]
+      end
+    end
+
+    if instance[:alias_fqdn_from_ip]
+      rrset instance[:alias_fqdn_from_ip], "CNAME" do
+        ttl 60
+        resource_records instance[:fqdn]
+      end
+    end
+  end
+end
+
+hosted_zone "200.10.in-addr.arpa." do
+  vpc "ap-northeast-1", "vpc-deadbeef"
+
+  dic.each do |host,ip|
+    next unless ip.start_with?("10.200.")
+    rrset "#{ip.split(?.).reverse.join(?.)}.in-addr.arpa.", "PTR" do
+      ttl 60
+      resource_records(
+        "#{host}.nw.techconf.cookpad.com.",
+      )
+    end
+  end
+
+  instances.each do |name, instance|
+    next unless instance[:ip].start_with?("10.200.")
+
+    rrset instance[:ptr_fqdn], "PTR" do
+      ttl 60
+      resource_records instance[:fqdn]
+    end
+  end
+end
+
+

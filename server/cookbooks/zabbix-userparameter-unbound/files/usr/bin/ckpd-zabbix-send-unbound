@@ -1,0 +1,339 @@
+#!/usr/bin/ruby
+require 'json'
+
+if ARGV.delete '--syslog'
+  syslog = IO.popen(['logger', '-t', 'ckpd-zabbix-send-unbound'], 'w')
+  $stderr.reopen(syslog)
+end
+
+TEST = false
+TESTDATA=<<EOF
+thread0.num.queries=100
+thread0.num.cachehits=30
+thread0.num.cachemiss=70
+thread0.num.prefetch=20
+thread0.num.zero_ttl=5
+thread0.num.recursivereplies=10
+thread0.requestlist.avg=30
+thread0.requestlist.max=40
+thread0.requestlist.overwritten=1
+thread0.requestlist.exceeded=4
+thread0.requestlist.current.all=8
+thread0.requestlist.current.user=4
+thread0.recursion.time.avg=2.000000
+thread0.recursion.time.median=1
+thread0.tcpusage=10
+thread1.num.queries=100
+thread1.num.cachehits=30
+thread1.num.cachemiss=70
+thread1.num.prefetch=20
+thread1.num.zero_ttl=5
+thread1.num.recursivereplies=10
+thread1.requestlist.avg=30
+thread1.requestlist.max=40
+thread1.requestlist.overwritten=1
+thread1.requestlist.exceeded=4
+thread1.requestlist.current.all=8
+thread1.requestlist.current.user=4
+thread1.recursion.time.avg=2.000000
+thread1.recursion.time.median=1
+thread1.tcpusage=10
+total.num.queries=200
+total.num.cachehits=60
+total.num.cachemiss=140
+total.num.prefetch=40
+total.num.zero_ttl=10
+total.num.recursivereplies=20
+total.requestlist.avg=30
+total.requestlist.max=40
+total.requestlist.overwritten=2
+total.requestlist.exceeded=8
+total.requestlist.current.all=16
+total.requestlist.current.user=8
+total.recursion.time.avg=2.000000
+total.recursion.time.median=1
+total.tcpusage=20
+time.now=1483600911.473013
+time.up=802.251472
+time.elapsed=732.420563
+mem.cache.rrset=33282
+mem.cache.message=33292
+mem.mod.iterator=16548
+mem.mod.validator=33320
+histogram.000000.000000.to.000000.000001=1
+histogram.000000.000001.to.000000.000002=2
+histogram.000000.000002.to.000000.000004=3
+histogram.000000.000004.to.000000.000008=4
+histogram.000000.000008.to.000000.000016=5
+histogram.000000.000016.to.000000.000032=6
+histogram.000000.000032.to.000000.000064=7
+histogram.000000.000064.to.000000.000128=8
+histogram.000000.000128.to.000000.000256=9
+histogram.000000.000256.to.000000.000512=10
+histogram.000000.000512.to.000000.001024=11
+histogram.000000.001024.to.000000.002048=12
+histogram.000000.002048.to.000000.004096=13
+histogram.000000.004096.to.000000.008192=14
+histogram.000000.008192.to.000000.016384=15
+histogram.000000.016384.to.000000.032768=16
+histogram.000000.032768.to.000000.065536=17
+histogram.000000.065536.to.000000.131072=18
+histogram.000000.131072.to.000000.262144=19
+histogram.000000.262144.to.000000.524288=20
+histogram.000000.524288.to.000001.000000=21
+histogram.000001.000000.to.000002.000000=22
+histogram.000002.000000.to.000004.000000=23
+histogram.000004.000000.to.000008.000000=24
+histogram.000008.000000.to.000016.000000=0
+histogram.000016.000000.to.000032.000000=0
+histogram.000032.000000.to.000064.000000=0
+histogram.000064.000000.to.000128.000000=0
+histogram.000128.000000.to.000256.000000=0
+histogram.000256.000000.to.000512.000000=0
+histogram.000512.000000.to.001024.000000=0
+histogram.001024.000000.to.002048.000000=0
+histogram.002048.000000.to.004096.000000=0
+histogram.004096.000000.to.008192.000000=0
+histogram.008192.000000.to.016384.000000=0
+histogram.016384.000000.to.032768.000000=0
+histogram.032768.000000.to.065536.000000=0
+histogram.065536.000000.to.131072.000000=0
+histogram.131072.000000.to.262144.000000=0
+histogram.262144.000000.to.524288.000000=0
+num.query.tcp=1
+num.query.tcpout=2
+num.query.ipv6=3
+num.query.flags.QR=1
+num.query.flags.AA=2
+num.query.flags.TC=3
+num.query.flags.RD=4
+num.query.flags.RA=5
+num.query.flags.Z=6
+num.query.flags.AD=7
+num.query.flags.CD=8
+num.query.edns.present=10
+num.query.edns.DO=10
+num.answer.rcode.NOERROR=1
+num.answer.rcode.FORMERR=2
+num.answer.rcode.SERVFAIL=3
+num.answer.rcode.NXDOMAIN=4
+num.answer.rcode.NOTIMPL=5
+num.answer.rcode.REFUSED=6
+num.answer.secure=10
+num.answer.bogus=1
+num.rrset.bogus=1
+unwanted.queries=1
+unwanted.replies=2
+msg.cache.count=1
+rrset.cache.count=2
+infra.cache.count=3
+key.cache.count=4
+EOF
+
+class ZabbixSendFailure < StandardError; end
+def zabbix_send(host_key_values, error: true, bulk: true)
+  if TEST
+    host_key_values.each do |x|
+      puts x.join(?\t)
+    end
+    return true
+  end
+  kvs_set = if bulk
+              [host_key_values]
+            else
+              host_key_values.map { |_| [_] }
+            end
+  kvs_set.each do |kvs|
+    IO.popen(["zabbix_sender", "-c", "/etc/zabbix/zabbix_agentd.conf", "-i", "-", err: [:child, :out]], 'r+') do |io|
+      kvs.each do |item|
+        line = item.join(" ")
+        io.puts line
+      end
+      io.close_write
+      out = io.read
+      _, status = Process.waitpid2(io.pid)
+      msg = if bulk
+              nil
+            else
+              " #{kvs[0].inspect}"
+            end
+      if error && !status.success?
+        $stderr.puts out
+        raise ZabbixSendFailure, "zabbix_send failed#{msg}" 
+      end
+      status.success?
+    end
+  end
+rescue ZabbixSendFailure
+  if bulk
+    zabbix_send(host_key_values, error: error, bulk: false)
+  else
+    raise
+  end
+end
+
+def get_stats()
+  data = if TEST
+           TESTDATA
+         else
+           IO.popen(['sudo', 'unbound-control', 'stats'], 'r', &:read)
+         end
+  raise "stats failed" if !TEST && !$?.success?
+
+  data.each_line.map { |_| _.chomp.split(?=, 2) }.to_h
+end
+
+def permin(value, elapsed)
+  (value * 60.0) / elapsed
+end
+
+def main
+  stats = get_stats()
+  elapsed = stats['time.elapsed'].to_f
+
+  # Thread discovery
+  threads = stats.keys.grep(/\Athread\d+\./).map { |_| _.split(?.,2).first[6..-1] }.uniq
+  zabbix_send([['-', 'unbound.thread_discovery', {data: threads.map{ |_| {'{#TH_NUM}' => _} }}.to_json]])
+
+  kvs = {}
+
+  %w(
+    num.queries permin
+    num.cachehits permin
+    num.cachemiss permin
+    num.prefetch permin
+    num.zero_ttl permin
+    num.recursivereplies permin
+    requestlist.avg asis
+    requestlist.max asis
+    requestlist.overwritten permin
+    requestlist.exceeded permin
+    requestlist.current.all asis
+    requestlist.current.user asis
+    recursion.time.avg asis
+    recursion.time.median asis
+    tcpusage asis
+  ).each_slice(2) do |key, mode|
+    ['total', *threads.map { |_| "thread#{_}" }].each do |prefix|
+      real_key = "#{prefix}.#{key}"
+      value = stats[real_key]
+      zabbix_key = "unbound.th.#{key}[#{prefix}]"
+      zabbix_value = case mode
+                     when 'asis'
+                       value
+                     when 'permin'
+                       permin(value.to_f, elapsed)
+                     else
+                       raise 'BUG'
+                     end
+      kvs[zabbix_key] = zabbix_value
+    end
+  end
+
+  %w(
+    histogram.000000.000000.to.000000.000001 8ms
+    histogram.000000.000001.to.000000.000002 8ms
+    histogram.000000.000002.to.000000.000004 8ms
+    histogram.000000.000004.to.000000.000008 8ms
+    histogram.000000.000008.to.000000.000016 8ms
+    histogram.000000.000016.to.000000.000032 8ms
+    histogram.000000.000032.to.000000.000064 8ms
+    histogram.000000.000064.to.000000.000128 8ms
+    histogram.000000.000128.to.000000.000256 8ms
+    histogram.000000.000256.to.000000.000512 8ms
+    histogram.000000.000512.to.000000.001024 8ms
+    histogram.000000.001024.to.000000.002048 8ms
+    histogram.000000.002048.to.000000.004096 8ms
+    histogram.000000.004096.to.000000.008192 8ms
+    histogram.000000.008192.to.000000.016384 32ms
+    histogram.000000.016384.to.000000.032768 32ms
+    histogram.000000.032768.to.000000.065536 66ms
+    histogram.000000.065536.to.000000.131072 131ms
+    histogram.000000.131072.to.000000.262144 262ms
+    histogram.000000.262144.to.000000.524288 524ms
+    histogram.000000.524288.to.000001.000000 1000ms
+    histogram.000001.000000.to.000002.000000 2000ms
+    histogram.000002.000000.to.000004.000000 4000ms
+    histogram.000004.000000.to.000008.000000 8000ms
+    histogram.000008.000000.to.000016.000000 longer
+    histogram.000016.000000.to.000032.000000 longer
+    histogram.000032.000000.to.000064.000000 longer
+    histogram.000064.000000.to.000128.000000 longer
+    histogram.000128.000000.to.000256.000000 longer
+    histogram.000256.000000.to.000512.000000 longer
+    histogram.000512.000000.to.001024.000000 longer
+    histogram.001024.000000.to.002048.000000 longer
+    histogram.002048.000000.to.004096.000000 longer
+    histogram.004096.000000.to.008192.000000 longer
+    histogram.008192.000000.to.016384.000000 longer
+    histogram.016384.000000.to.032768.000000 longer
+    histogram.032768.000000.to.065536.000000 longer
+    histogram.065536.000000.to.131072.000000 longer
+    histogram.131072.000000.to.262144.000000 longer
+    histogram.262144.000000.to.524288.000000 longer
+  ).each_slice(2).inject({}) do |histogram, (key, group)|
+    zabbix_key = "unbound.histogram.#{group}"
+    histogram[zabbix_key] ||= 0
+    histogram[zabbix_key] += stats[key].to_i
+    histogram
+  end.each do |key, value|
+    kvs[key] = permin(value, elapsed)
+  end
+
+  %w(
+    mem.cache.rrset asis
+    mem.cache.message asis
+    mem.mod.iterator asis
+    mem.mod.validator asis
+    num.query.tcp permin
+    num.query.tcpout permin
+    num.query.ipv6 permin
+    num.query.flags.* permin
+    num.query.edns.present permin
+    num.query.edns.DO permin
+    num.answer.rcode.* permin
+    num.answer.secure permin
+    num.answer.bogus permin
+    num.rrset.bogus permin
+    unwanted.queries permin
+    unwanted.replies permin
+    msg.cache.count asis
+    rrset.cache.count asis
+    infra.cache.count asis
+    key.cache.count asis
+  ).each_slice(2).flat_map do |(key, mode)|
+    if key.include?('*')
+      stats.keys.grep(/\A#{Regexp.escape(key[0..-2])}/).map do |k|
+        [k, mode]
+      end
+    else
+      [[key, mode]]
+    end
+  end.each do |(key, mode)|
+    value = stats[key]
+    zabbix_value = case mode
+                   when 'asis'
+                     value
+                   when 'permin'
+                     permin(value.to_f, elapsed)
+                   else
+                     raise 'BUG'
+                   end
+    kvs["unbound.#{key}"] = zabbix_value
+  end
+
+  zabbix_send(kvs.map { |k,v| ['-', k, v] })
+end
+
+begin
+  main()
+rescue Exception => e
+  puts 1
+  $stderr.puts "#{e.inspect}"
+  e.backtrace.each do |x|
+    $stderr.puts x
+  end
+  exit
+end
+
+puts 0

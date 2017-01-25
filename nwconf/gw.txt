@@ -1,0 +1,283 @@
+!
+! Last configuration change at 05:49:31 UTC Fri Jan 20 2017 by admin
+! NVRAM config last updated at 05:50:13 UTC Fri Jan 20 2017 by admin
+!
+version 15.0
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname TechConf-GW
+!
+boot-start-marker
+boot-end-marker
+!
+logging buffered 100000
+no logging console
+enable secret 5 MASK
+!
+no aaa new-model
+!
+!
+!
+!
+no ipv6 cef
+ip source-route
+ip cef
+!
+!
+!
+!
+ip domain name nw.techconf.cookpad.com
+ip name-server 10.200.17.10
+!
+multilink bundle-name authenticated
+!
+!
+!
+!
+license udi pid CISCO2921/K9 sn XXXXX
+license boot module c2900 technology-package securityk9
+!
+!
+username admin privilege 15 password 7 MASK
+!
+redundancy
+!
+!
+ip ssh authentication-retries 5
+ip ssh version 2
+!
+crypto keyring keyring-vpn-A-0
+  local-address 192.0.2.1
+  pre-shared-key address 203.0.113.1 key MASK
+crypto keyring keyring-vpn-A-1
+  local-address 192.0.2.1
+  pre-shared-key address 203.0.113.1 key MASK
+!
+crypto isakmp policy 200
+ encr aes
+ authentication pre-share
+ group 2
+ lifetime 28800
+!
+crypto isakmp policy 201
+ encr aes
+ authentication pre-share
+ group 2
+ lifetime 28800
+!
+crypto isakmp profile isakmp-vpn-A-0
+   keyring keyring-vpn-A-0
+   match identity address 203.0.113.1 255.255.255.255
+   local-address 192.0.2.1
+crypto isakmp profile isakmp-vpn-A-1
+   keyring keyring-vpn-A-1
+   match identity address 203.0.113.2 255.255.255.255
+   local-address 192.0.2.1
+!
+crypto ipsec security-association replay window-size 128
+!
+crypto ipsec transform-set ipsec-prop-vpn-A-0 esp-aes esp-sha-hmac
+crypto ipsec transform-set ipsec-prop-vpn-A-1 esp-aes esp-sha-hmac
+crypto ipsec df-bit clear
+!
+crypto ipsec profile ipsec-vpn-A-0
+ set transform-set ipsec-prop-vpn-A-0
+ set pfs group2
+!
+crypto ipsec profile ipsec-vpn-A-1
+ set transform-set ipsec-prop-vpn-A-1
+ set pfs group2
+!
+!
+!
+!
+!
+!
+interface Loopback0
+ ip address 10.200.18.1 255.255.255.255
+ !
+!
+interface Tunnel1
+ ip address 169.254.27.110 255.255.255.252
+ ip virtual-reassembly
+ ip tcp adjust-mss 1387
+ tunnel source 192.0.2.1
+ tunnel mode ipsec ipv4
+ tunnel destination 203.0.113.1
+ tunnel protection ipsec profile ipsec-vpn-A-0
+ !
+!
+interface Tunnel2
+ ip address 169.254.24.158 255.255.255.252
+ ip virtual-reassembly
+ ip tcp adjust-mss 1387
+ tunnel source 192.0.2.1
+ tunnel mode ipsec ipv4
+ tunnel destination 203.0.113.2
+ tunnel protection ipsec profile ipsec-vpn-A-1
+ !
+!
+!
+interface GigabitEthernet0/0
+ ip address 192.0.2.1 255.255.255.0
+ ip access-group ACL_Internet in
+ ip nat outside
+ ip virtual-reassembly
+ duplex auto
+ speed auto
+ !
+!
+interface GigabitEthernet0/1
+ no ip address
+ ip virtual-reassembly
+ duplex auto
+ speed auto
+ !
+!
+interface GigabitEthernet0/1.100
+ encapsulation dot1Q 100
+ ip address 10.200.0.1 255.255.240.0
+ ip access-group ACL_clients in
+ ip helper-address 10.200.172.122
+ ip nat inside
+ ip virtual-reassembly
+!
+ encapsulation dot1Q 200 native
+ ip address 10.200.16.1 255.255.255.0
+ ip helper-address 10.200.172.122
+ ip nat inside
+ ip virtual-reassembly
+!
+interface GigabitEthernet0/1.210
+ encapsulation dot1Q 210
+ ip address 10.200.17.1 255.255.255.0
+ ip nat inside
+ ip virtual-reassembly
+!
+interface GigabitEthernet0/2
+ no ip address
+ shutdown
+ duplex auto
+ speed auto
+ !
+!
+router bgp 65000
+ bgp log-neighbor-changes
+ neighbor 169.254.24.157 remote-as 10124
+ neighbor 169.254.24.157 timers 10 30 30
+ neighbor 169.254.27.109 remote-as 10124
+ neighbor 169.254.27.109 timers 10 30 30
+ !
+ address-family ipv4
+  no synchronization
+  redistribute connected route-map MAP_aws_route_prefix_out
+  neighbor 169.254.24.157 activate
+  neighbor 169.254.24.157 default-originate
+  neighbor 169.254.24.157 soft-reconfiguration inbound
+  neighbor 169.254.27.109 activate
+  neighbor 169.254.27.109 default-originate
+  neighbor 169.254.27.109 soft-reconfiguration inbound
+  no auto-summary
+ exit-address-family
+!
+ip forward-protocol nd
+!
+no ip http server
+no ip http secure-server
+!
+ip nat log translations syslog
+ip nat translation timeout 600
+ip nat translation tcp-timeout 600
+ip nat translation udp-timeout 600
+ip nat translation finrst-timeout 15
+ip nat translation syn-timeout 30
+ip nat translation dns-timeout 15
+ip nat translation routemap-entry-timeout 15
+ip nat translation icmp-timeout 10
+ip nat translation max-entries 65000
+ip nat translation max-entries all-host 200
+ip nat translation arp-ping-timeout 10
+ip nat inside source list ACL_PAT interface GigabitEthernet0/0 overload
+ip route 0.0.0.0 0.0.0.0 192.0.2.254
+!
+ip access-list standard ACL_snmp_in
+ permit 10.200.16.0 0.0.0.255
+ permit 10.200.128.0 0.0.127.255
+ deny   any
+!
+ip access-list extended ACL_Internet
+ permit icmp any host 192.0.2.1 echo
+ permit tcp any any established
+ permit udp any eq domain any
+ permit udp any host 192.0.2.1
+ permit icmp any any echo-reply
+ permit icmp any any time-exceeded
+ permit icmp any any packet-too-big
+ permit udp any host 192.0.2.1 eq 1701
+ permit udp any host 192.0.2.1 eq non500-isakmp
+ permit udp any host 192.0.2.1 eq isakmp
+ permit esp any host 192.0.2.1
+ deny   ip any any
+ deny   ip any 169.254.0.0 0.0.255.255
+ip access-list extended ACL_PAT
+ permit ip 10.200.0.0 0.0.127.255 any
+ip access-list extended ACL_aws_route_prefix_out
+ permit ip 10.200.0.0 0.0.127.255 255.255.128.0 0.0.127.255
+ deny   ip any any
+ip access-list extended ACL_clients
+ permit icmp 10.200.0.0 0.0.15.255 any
+ permit tcp any any established
+ permit udp 10.200.0.0 0.0.15.255 any eq domain
+ deny   ip any 10.200.16.0 0.0.0.255
+ deny   ip any 10.200.18.0 0.0.0.255
+ deny   tcp any 10.200.17.0 0.0.0.255 eq 22
+ deny   ip any host 10.200.172.122
+ permit ip 10.200.16.0 0.0.0.255 any
+ permit ip any any
+ip access-list extended ACL_ssh
+ permit ip 10.200.16.0 0.0.0.255 any
+ permit ip 10.200.128.0 0.0.127.255 any
+ deny   ip any any
+!
+!
+ip prefix-list PREFIX_aws_route_in seq 110 deny 10.200.0.0/17 le 32
+ip prefix-list PREFIX_aws_route_in seq 900 permit 0.0.0.0/0
+logging source-interface GigabitEthernet0/1.200
+logging 10.200.171.244
+!
+!
+!
+!
+route-map MAP_aws_route_prefix_out permit 10
+ match ip address ACL_aws_route_prefix_out
+!
+route-map MAP_aws_route_prefix_out deny 100
+!
+!
+snmp-server community MASK ACL_snmp_in
+!
+control-plane
+ !
+!
+!
+line con 0
+ login local
+line aux 0
+line vty 0 4
+ privilege level 15
+ login local
+line vty 5 15
+ access-class ACL_ssh in
+ privilege level 15
+ login local
+ transport input ssh
+!
+scheduler allocate 20000 1000
+ntp server time1.google.com source GigabitEthernet0/1.200
+ntp server time2.google.com source GigabitEthernet0/1.200
+ntp server time3.google.com source GigabitEthernet0/1.200
+ntp server time4.google.com source GigabitEthernet0/1.200
+end
+

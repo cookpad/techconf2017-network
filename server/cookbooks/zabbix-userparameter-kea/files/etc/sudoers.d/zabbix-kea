@@ -1,0 +1,4 @@
+Cmnd_Alias KEA_STATS_CMD = /usr/bin/ckpd-kea-stats
+Defaults!KEA_STATS_CMD !requiretty,!syslog
+
+ALL ALL = (root) NOPASSWD: KEA_STATS_CMD

@@ -1,0 +1,222 @@
+!
+! Last configuration change at 05:17:38 UTC Fri Jan 20 2017 by admin
+! NVRAM config last updated at 05:17:39 UTC Fri Jan 20 2017 by admin
+!
+version 12.2
+no service pad
+service timestamps debug datetime msec
+service timestamps log datetime msec
+no service password-encryption
+!
+hostname TechConf-SW
+!
+boot-start-marker
+boot-end-marker
+!
+logging buffered 100000
+enable secret 5 MASK
+!
+username admin privilege 15 password 0 MASK
+!
+!
+no aaa new-model
+switch 1 provision ws-c2960s-24ps-l
+!
+!
+ip domain-name mgmt.nw.techconf.cookpad.com
+ip name-server 10.200.17.10
+vtp mode transparent
+!
+!
+!
+spanning-tree mode pvst
+spanning-tree extend system-id
+!
+!
+!
+!
+vlan internal allocation policy ascending
+!
+vlan 100,200,210
+!
+ip ssh authentication-retries 5
+ip ssh version 2
+!
+!
+interface Port-channel1
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 100,200
+ switchport mode trunk
+!
+interface FastEthernet0
+ no ip address
+ shutdown
+!
+interface GigabitEthernet1/0/1
+ description gw
+ switchport trunk native vlan 200
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/2
+ description thinkpad
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/3
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/4
+!
+interface GigabitEthernet1/0/5
+!
+interface GigabitEthernet1/0/6
+!
+interface GigabitEthernet1/0/7
+!
+interface GigabitEthernet1/0/8
+!
+interface GigabitEthernet1/0/9
+ description debug-mgmt
+ switchport trunk native vlan 200
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/10
+ description debug-mgmt
+ switchport trunk native vlan 200
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/11
+ description debug-mgmt
+ switchport trunk native vlan 200
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/12
+ description debug-client
+ switchport trunk native vlan 100
+ switchport mode trunk
+!
+interface GigabitEthernet1/0/13
+ description WLC LAG
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 100,200
+ switchport mode trunk
+ channel-group 1 mode on
+!
+interface GigabitEthernet1/0/14
+ description WLC LAG
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 100,200
+ switchport mode trunk
+ channel-group 1 mode on
+!
+interface GigabitEthernet1/0/15
+ description WLC LAG
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 100,200
+ switchport mode trunk
+ channel-group 1 mode on
+!
+interface GigabitEthernet1/0/16
+ description WLC LAG
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 100,200
+ switchport mode trunk
+ channel-group 1 mode on
+!
+interface GigabitEthernet1/0/17
+!
+interface GigabitEthernet1/0/18
+!
+interface GigabitEthernet1/0/19
+ shutdown
+!
+interface GigabitEthernet1/0/20
+ shutdown
+!
+interface GigabitEthernet1/0/21
+ description ap1
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 100,200
+ switchport mode trunk
+ switchport protected
+!
+interface GigabitEthernet1/0/22
+ description ap2
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 100,200
+ switchport mode trunk
+ switchport protected
+!
+interface GigabitEthernet1/0/23
+ description ap3
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 100,200
+ switchport mode trunk
+ switchport protected
+!
+interface GigabitEthernet1/0/24
+ description ap4
+ switchport trunk native vlan 200
+ switchport trunk allowed vlan 100,200
+ switchport mode trunk
+ switchport protected
+!
+interface GigabitEthernet1/0/25
+ shutdown
+!
+interface GigabitEthernet1/0/26
+ shutdown
+!
+interface GigabitEthernet1/0/27
+ shutdown
+!
+interface GigabitEthernet1/0/28
+ shutdown
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+interface Vlan100
+ description rvi-client
+ no ip address
+!
+interface Vlan200
+ description rvi-mgmt
+ ip address 10.200.16.2 255.255.255.0
+!
+interface Vlan210
+ description rvi-server
+ no ip address
+!
+ip default-gateway 10.200.16.1
+no ip http server
+no ip http secure-server
+!
+ip access-list standard ACL_snmp_in
+ permit 10.200.16.0 0.0.0.255
+ permit 10.200.128.0 0.0.127.255
+ deny   any
+!
+ip access-list extended ACL_ssh
+ permit ip 10.200.16.0 0.0.0.255 any
+ permit ip 10.200.128.0 0.0.127.255 any
+ deny   ip any any
+ip sla enable reaction-alerts
+logging source-interface Vlan200
+logging 10.200.171.244
+snmp-server community MASK ACL_snmp_in
+!
+line con 0
+ login local
+line vty 0 4
+ login local
+line vty 5 15
+ access-class ACL_ssh in
+ privilege level 15
+ login local
+ transport input ssh
+!
+ntp clock-period 22518714
+ntp server 216.239.35.12 source Vlan200
+end
+
